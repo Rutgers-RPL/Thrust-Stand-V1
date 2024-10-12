@@ -1,21 +1,25 @@
 #ifndef Sensors_H
 #define Sensors_H
 #include <Arduino.h>
-#include <SdFat.h>
 #include <string.h>
 #include <structs.h>
 #include <EEPROM.h>
 #include <hX711.h>
+#include <string.h>
 
-#define FILE_BASE_NAME "TestStandLog_"
-const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
+// #define FILE_BASE_NAME "TestStandLog_"
+// const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
 
 // HX711 circuit wiring
-const int LOADCELL_DOUT_PIN = 34;
-const int LOADCELL_SCK_PIN = 33;
+#define LOADCELL_DOUT_PIN       34
+#define LOADCELL_SCK_PIN        33
 
 // Pressure Transducer Wiring
-const int PRESSURE_TRANSDUCER_PIN = 38;
+#define PRESSURE_TRANSDUCER_PIN 24
+
+#define MODE_O_PIN 00
+#define MODE_Ix_PIN 00
+
 
 float scale_factor = 1.0;
 
@@ -23,26 +27,22 @@ HX711 scale;
 
 class Sensors{
     public:
-
-        SdFs sd;
-        FsFile f;
-        bool sdexists = false;
-
-        char* fileName = FILE_BASE_NAME "0000.bin";
+        String fileName;
 
         Sensors(){
         }
 
-        void init(data_packet packet) {
+        uint8_t init() {
             scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-            EEPROM.get(0, scale_factor);
-            if (scale_factor != scale_factor) {
-                scale_factor = 1000;
-            }
-            Serial.print("Loaded scale factor: \t");
-            Serial.println(scale_factor);
-            scale.set_scale(scale_factor);
-            scale.tare();
+            // EEPROM.get(0, scale_factor);
+            // if (scale_factor != scale_factor) {
+            //     scale_factor = 1000;
+            // }
+            // Serial.print("Loaded scale factor: \t");
+            // Serial.println(scale_factor);
+            // scale.set_scale(scale_factor);
+            scale.set_scale(1);
+            scale.tare(10);
         }
 
         float readForce() {
@@ -54,72 +54,6 @@ class Sensors{
 
             // out put from 0.4-4.5v 0psi-1600psi
             return (raw+5 - (1024.0*0.1)) * (1600 * (4.0/1024));
-        }
-
-        void beginSD(data_packet packet) {
-            delay(1000);
-            byte attempts = 1;
-            while (attempts <= 10) {
-                if (!sd.begin(SdioConfig(FIFO_SDIO))) {
-                    Serial.print("SD Begin Failed, Attempting "); Serial.print(10 - attempts++); Serial.println(" more tries ...");
-                    delay(1000);
-                } else {
-                    Serial.println("\nFIFO SDIO mode.");
-
-                    // Enumerates File Name
-                    while (sd.exists(fileName)) {
-                        if (fileName[BASE_NAME_SIZE + 3] != '9') {
-                            fileName[BASE_NAME_SIZE + 3]++;
-                        } else if (fileName[BASE_NAME_SIZE + 2] != '9') {
-                            fileName[BASE_NAME_SIZE + 3] = '0';
-                            fileName[BASE_NAME_SIZE + 2]++;
-                        } else if (fileName[BASE_NAME_SIZE + 1] != '9') {
-                            fileName[BASE_NAME_SIZE + 2] = '0';
-                            fileName[BASE_NAME_SIZE + 3] = '0';
-                            fileName[BASE_NAME_SIZE + 1]++;
-                        } else if (fileName[BASE_NAME_SIZE] != '9') {
-                            fileName[BASE_NAME_SIZE + 1] = '0';
-                            fileName[BASE_NAME_SIZE + 2] = '0';
-                            fileName[BASE_NAME_SIZE + 3] = '0';
-                            fileName[BASE_NAME_SIZE]++;
-                        } else {
-                            Serial.println("Can't create file name");
-                        }
-                    }
-
-                    f = sd.open(fileName, FILE_WRITE);
-                    Serial.print("Writing to: ");
-                    Serial.println(fileName);
-                    if (!f) {
-                        Serial.println("Failed opening file.");
-                        break;
-                    }
-                    sdexists = true;
-                    break;
-                }
-            }
-        }
-
-        void logBinaryPacket(const data_packet packet) {
-            f.write((const uint8_t *)&packet, sizeof(data_packet));
-        }
-
-        void logPacket(const data_packet packet) {
-            f.print(packet.magic); f.print(","); 
-            f.print(packet.time_s); f.print(",");
-            f.print(packet.force); f.print(",");
-            f.print(packet.pressure); f.print(",");
-            f.print(packet.checksum); f.print(",");
-            f.println();
-        }
-
-        void printPacket(const data_packet packet) {
-            Serial.print(packet.magic); Serial.print("\t"); 
-            Serial.print(packet.time_s); Serial.print("\t"); 
-            Serial.print(packet.force); Serial.print("\t");
-            Serial.print(packet.pressure); Serial.print("\t");
-            Serial.print(packet.checksum); Serial.print("\t");
-            Serial.println();
         }
 
         void executeCommand() {
