@@ -18,8 +18,6 @@ Logging::Logging()
 
 u_int8_t Logging::init()
 {
-
-
     delay(1000);
     byte attempts = 1;
     u_int8_t status = 1 * this->sdExists;
@@ -59,4 +57,20 @@ u_int8_t Logging::init()
     }
 
     this->bufferCount = 0;
+
+    return status;
+};
+
+void Logging::writeBytes(const uint8_t* bytes, size_t length, bool force_sync=false)
+{
+    if (sdExists)
+    {
+        bufferCount++;
+        this->dataFile.write(bytes, length);
+        if (force_sync || bufferCount >= LOGGING_BUFFER_SIZE)
+        {
+            this->dataFile.sync();   
+            bufferCount = 0;
+        }
+    }
 };

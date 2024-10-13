@@ -1,12 +1,15 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <FastCRC.h>
+#include "structs.h"
+#include "sensors.h"
+#include "logging.h"
 
+#define MAGIC 0xA123
+#define CAL_SIGNAL_PIN 00
 
-#include <structs.h>
-#include <sensors.h>
-
-data_packet packet;
+LoadCellPacket LCPacket;
+PressurePacket PPackets[3];
 
 Sensors sen;
 
@@ -15,22 +18,25 @@ FastCRC32 CRC32;
 elapsedMicros printTimer;
 elapsedMillis sdSaveTimer;
 
-short magic = 0xA123;
-
+Logging logging;
 
 void setup() {
-  packet.magic = magic;
+  LCPacket.magic = MAGIC;
   Serial.begin(115200);
-  Serial.println("Initializing sensors");
-  sen.init(packet);
-  // sen.beginSD(packet);
+  
+  logging.init();
+
+  if (digitalRead(CAL_SIGNAL_PIN) == HIGH)
+  {
+    Serial.println("Beginning Calibration Sequence...");
+    sen.calibrate(logging);
+  }
+  
 }
 
 void loop() {
 
-  if (Serial.available()) {
-    sen.executeCommand();
-  }
+
 
   // if (printTimer > (1000000 / 80)) {
   //   packet.force = sen.readForce();
@@ -47,6 +53,5 @@ void loop() {
   //   sdSaveTimer = 0;
   // }
 
-  Serial.printf("L: %f, P: %f \n", sen.readForce(), ((float)analogRead(24)));
 
 }

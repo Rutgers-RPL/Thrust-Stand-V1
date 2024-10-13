@@ -37,14 +37,16 @@ class Logging{
             this->dataFile.write((const uint8_t *)packet, sizeof(T));
             if (bufferCount >= LOGGING_BUFFER_SIZE)
             {
-                this->dataFile.sync();   
+                this->dataFile.sync();
                 bufferCount = 0;
             }
         };
 
+        void writeBytes(const uint8_t* bytes, size_t length, bool force_sync=false);
+
     private:
         u_int8_t bufferCount;
-        SdFs sd;
+        SdFat sd;
         FsFile dataFile;
 };
 
