@@ -2,4 +2,4 @@
 .vscode
 lib/
 include/
-.csv
+*.csv

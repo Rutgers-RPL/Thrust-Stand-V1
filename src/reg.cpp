@@ -1,4 +1,4 @@
-#include "Reg.h"
+#include "reg.h"
 
 float LinearRegression::calculateSlope(const float* x, const float* y, size_t size) {
     size_t i = 0;

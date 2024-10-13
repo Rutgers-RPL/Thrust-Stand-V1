@@ -16,10 +16,6 @@
 #define LOADCELL_DOUT_PIN       34
 #define LOADCELL_SCK_PIN        33
 
-// Pressure Transducer Wiring
-#define PRESSURE_TRANSDUCER_PIN 24
-
-
 
 class Sensors{
     public:
@@ -29,6 +25,7 @@ class Sensors{
         HX711 scale;
 
         Sensors(){
+            load_scale_factor = 0.f;
         }
 
         uint8_t init() {
@@ -45,6 +42,8 @@ class Sensors{
 
             scale.set_scale(load_scale_factor);
             scale.tare(10);
+
+            analogReadResolution(16);
 
             return status;
         }
@@ -161,7 +160,7 @@ class Sensors{
                 
                 Serial.printf("%f second test, press ENTER to begin:");
                 size_t n_samples = 0;
-                time_t start_time = millis();
+                u_int32_t start_time = millis();
                 
                 while(millis() - start_time < duration)
                 {
@@ -198,14 +197,16 @@ class Sensors{
         }
 
         float readForce() {
-            return scale.get_units(1);
+            return scale.get_units(load_scale_factor);
         }
 
-        float readPressure(){
-            int raw = analogRead(PRESSURE_TRANSDUCER_PIN);
+        static float voltageToPressure(float v){ //TODO Tweak this based on observed data
+            // out put from 0.0-3.3v 0psi-1600psi
+            return v * (1600.0/3.3);
+        }
 
-            // out put from 0.4-4.5v 0psi-1600psi
-            return (raw+5 - (1024.0*0.1)) * (1600 * (4.0/1024));
+        static float readVoltage(uint8_t pin){
+            return analogRead(pin)/(65535.0) * 3.3; 
         }
 
 };

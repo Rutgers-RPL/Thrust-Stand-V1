@@ -44,10 +44,15 @@ class Logging{
 
         void writeBytes(const uint8_t* bytes, size_t length, bool force_sync=false);
 
+        void printLoadCellPacket(const LoadCellPacket &packet);
+        void printPressurePacket(const PressurePacket &packet);
+
     private:
         u_int8_t bufferCount;
         SdFat sd;
         FsFile dataFile;
 };
+
+
 
 #endif 

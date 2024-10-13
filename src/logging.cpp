@@ -74,3 +74,12 @@ void Logging::writeBytes(const uint8_t* bytes, size_t length, bool force_sync=fa
         }
     }
 };
+
+void Logging::printLoadCellPacket(const LoadCellPacket &packet) {
+    Serial.printf("%u,%u,%6.6f,%u,%u\n", packet.magic, packet.time_ms, packet.force, packet.status, packet.checksum);
+}
+
+// Function to print PressurePacket
+void Logging::printPressurePacket(const PressurePacket &packet) {
+    Serial.printf("%u,%u,%u,%u,%6.6f,%6.6f,%u\n", packet.magic, packet.status, packet.idx, packet.time_ms, packet.voltage, packet.pressure, packet.checksum);
+}
