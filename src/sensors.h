@@ -4,7 +4,7 @@
 #include <string.h>
 #include <structs.h>
 #include <EEPROM.h>
-#include <hX711.h>
+#include "HX711.h"
 #include <string.h>
 #include "logging.h"
 #include "reg.h"
